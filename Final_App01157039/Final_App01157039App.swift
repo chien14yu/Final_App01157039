@@ -7,26 +7,30 @@
 
 import SwiftUI
 import SwiftData
+import TipKit
 
 @main
 struct Final_App01157039App: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppContainerView()
+                .onAppear {
+                    PushNotificationManager.shared.requestAuthorization { granted, error in
+                        if granted {
+                            print("通知授權成功")
+                        } else {
+                            print("通知授權失敗: \(String(describing: error?.localizedDescription))")
+                        }
+                    }
+                }
+                .task {
+                    try? Tips.resetDatastore()
+                    
+                    try? Tips.configure([
+                        .displayFrequency(.immediate),
+                        .datastoreLocation(.applicationDefault)
+                    ])
+                }
         }
-        .modelContainer(sharedModelContainer)
     }
 }
